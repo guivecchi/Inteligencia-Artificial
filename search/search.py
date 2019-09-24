@@ -219,33 +219,31 @@ def breadthFirstSearch(problem):
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    # Define o nodo como um conjunto contendo o estado inicial, o custo do caminho e a lista de passos percorridos
-    nodo = (problem.getStartState(),0,[])
+    caminho=[]
+    # Estado inicial salva o estado inicial (posicao x,y), o custo do estado atual e o caminho percorrido ate o estado atual
+    estado_inicial = (problem.getStartState(), 0, caminho)
 
-    # Cria a fila de prioridade 
-    fila = util.PriorityQueue()  
-    # Insere o nodo e a prioridade definida na fila
-    fila.push(nodo,problem)
-    nodosExplorados = []
-    while True:
-    # Verifica se a fila estar vazia, se estiver encerrar a iteracao
-        if fila.isEmpty(): 
-            return False
-        estado, custoMeta, caminho = fila.pop() # Desempilha o estado, o custo, e o elemento com a maior prioridade da fila
-        if problem.isGoalState(estado):   # Verifica se estar no estado meta
-            return caminho   # Retorna o caminho do no inicial ate o estado
-        if estado not in nodosExplorados:  
-            nodosExplorados.append(estado) # Adiciona o nodo na lista de nodos explorados
+    fila_prioridade = PriorityQueue()
+    fila_prioridade.push(estado_inicial, 1)
+
+    estados_visitados = []
+
+    while not(fila_prioridade.isEmpty()):
+        estado, custo_atual, caminho = fila_prioridade.pop()
+        if problem.isGoalState(estado):
+            return caminho
+        if estado not in estados_visitados:
+            estados_visitados.append(estado)
             sucessores = problem.getSuccessors(estado)
-        # Percorre os filhos do elemento desempilhado 
-            for sucessor, direcao, custoNo in sucessores:
-                if sucessor not in nodosExplorados:
-                    custoCaminho = custoMeta + custoNo
-                    # Insere o filho do elemento desempilhado com o menor custo acumulado como prioridade para realizar a expansao
-                    fila.push((sucessor,custoCaminho,caminho+[direcao]), custoCaminho)
-                #print "Caminho percorrido:\n", caminho
-                #print "Numero de estados:\n", len(caminho)x
-    return caminho
+            for estado_sucessor, direcao, custo_sucessor in sucessores:
+                if estado_sucessor not in estados_visitados:
+                    # Calcula o custo acumulado, somando o custo atual e o custo do sucessor
+                    custo_acumulado = custo_atual + custo_sucessor
+
+                    # Coloca na fila de prioridade o estado sucessor, custo acumulado e o caminho, alem da prioridade, 
+                    # que e tambem o custo acumulado (quanto menor o custo, maior a prioridade)
+                    fila_prioridade.push((estado_sucessor, custo_acumulado, caminho+[direcao]), custo_acumulado)
+
 
 
 def nullHeuristic(state, problem=None):
