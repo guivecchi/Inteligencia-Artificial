@@ -262,6 +262,15 @@ def euclideanHeuristic(position, problem, info={}):
     xy2 = problem.goal
     return ( (xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2 ) ** 0.5
 
+def movimentacoesPossiveisHeuristic(position, problem, info={}):
+    sucessores = problem.getSuccessors(position)
+    return len(sucessores)
+
+def movimentacoesPossiveisHeuristic2(position, problem, info={}):
+    sucessores = problem.getSuccessors(position)
+    # Se tem 4 graus de liberdade, menor custo. Quanto menos graus, maior custo
+    return 4 - len(sucessores)
+
 #####################################################
 # This portion is incomplete.  Time to write code!  #
 #####################################################

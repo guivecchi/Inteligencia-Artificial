@@ -17,7 +17,8 @@ In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
 
-from util import Stack, Queue
+import util
+from util import Stack, Queue, PriorityQueue
 
 
 class SearchProblem:
@@ -158,14 +159,20 @@ def breadthFirstSearch(problem):
     current_state = initial_state
     sucessors = []
     estados_visitados = []
-    caminho = []
+    pais = [] 
+    caminho =[0]
+    rota = []
 
     Fila = Queue()
+
+    # print(problem.getSuccessors((3,1)))
 
     while problem.isGoalState(current_state) == False:
         Initial_Length = len(sucessors)
         for i in range(0, len(problem.getSuccessors(current_state))):
             sucessors.append(problem.getSuccessors(current_state)[i])
+            caminho.append((problem.getSuccessors(current_state)[i][1]))
+            pais.append(current_state)
 
         for i in range(Initial_Length, len(sucessors)):
             Fila.push(list(sucessors[i]))
@@ -175,19 +182,25 @@ def breadthFirstSearch(problem):
             estado_testado = (Fila.pop())
             if estado_testado[0] not in estados_visitados:
                 current_state = estado_testado[0]
-                caminho.append(estado_testado[1])
                 nao_visitado = True
             else:
                 nao_visitado = False
 
         estados_visitados.append(current_state)
 
-    print(estados_visitados)
-
-    for i in range(len(estados_visitados) - 1, 1, -1):
-        if not(abs(estados_visitados[i][0] - estados_visitados[i-1][0]) <= 1 and abs(estados_visitados[i][1] - estados_visitados[i-1][1]) <= 1 and (abs(estados_visitados[i][0] - estados_visitados[i-1][0]) + abs(estados_visitados[i][1] - estados_visitados[i-1][1])) <= 1):
-            del estados_visitados[i-1]
-            del caminho[i-1]
+    past_state = current_state
+    while current_state != initial_state:
+        print(current_state)
+        print(past_state)
+        print("\n")
+        for i in range(0, len(sucessors)):
+            if sucessors[i][0] == current_state and past_state != pais [i]:
+                rota.append(current_state)
+                past_state = current_state
+                current_state = pais[i]
+    
+    print("Rota: ")
+    print(rota)
 
     for i in range(0, len(caminho)):
         if caminho[i] == "North":
@@ -206,8 +219,33 @@ def breadthFirstSearch(problem):
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # Define o nodo como um conjunto contendo o estado inicial, o custo do caminho e a lista de passos percorridos
+    nodo = (problem.getStartState(),0,[])
+
+    # Cria a fila de prioridade 
+    fila = util.PriorityQueue()  
+    # Insere o nodo e a prioridade definida na fila
+    fila.push(nodo,problem)
+    nodosExplorados = []
+    while True:
+    # Verifica se a fila estar vazia, se estiver encerrar a iteracao
+        if fila.isEmpty(): 
+            return False
+        estado, custoMeta, caminho = fila.pop() # Desempilha o estado, o custo, e o elemento com a maior prioridade da fila
+        if problem.isGoalState(estado):   # Verifica se estar no estado meta
+            return caminho   # Retorna o caminho do no inicial ate o estado
+        if estado not in nodosExplorados:  
+            nodosExplorados.append(estado) # Adiciona o nodo na lista de nodos explorados
+            sucessores = problem.getSuccessors(estado)
+        # Percorre os filhos do elemento desempilhado 
+            for sucessor, direcao, custoNo in sucessores:
+                if sucessor not in nodosExplorados:
+                    custoCaminho = custoMeta + custoNo
+                    # Insere o filho do elemento desempilhado com o menor custo acumulado como prioridade para realizar a expansao
+                    fila.push((sucessor,custoCaminho,caminho+[direcao]), custoCaminho)
+                #print "Caminho percorrido:\n", caminho
+                #print "Numero de estados:\n", len(caminho)x
+    return caminho
 
 
 def nullHeuristic(state, problem=None):
@@ -215,13 +253,37 @@ def nullHeuristic(state, problem=None):
     A heuristic function estimates the cost from the current state to the nearest
     goal in the provided SearchProblem.  This heuristic is trivial.
     """
+
     return 0
 
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    caminho=[]
+    # Estado inicial salva o estado inicial (posicao x,y), o custo do estado atual e o caminho percorrido ate o estado atual
+    estado_inicial = (problem.getStartState(), 0 + heuristic(problem.getStartState(), problem), caminho)
+
+    fila_prioridade = PriorityQueue()
+    fila_prioridade.push(estado_inicial, 1)
+
+    estados_visitados = []
+
+    while not(fila_prioridade.isEmpty()):
+        estado, custo_atual, caminho = fila_prioridade.pop()
+        if problem.isGoalState(estado):
+            return caminho
+        if estado not in estados_visitados:
+            estados_visitados.append(estado)
+            sucessores = problem.getSuccessors(estado)
+            for estado_sucessor, direcao, custo_sucessor in sucessores:
+                if estado_sucessor not in estados_visitados:
+                    # Calcula o custo acumulado, somando o custo atual, o custo do sucessor e a funcao heuristica
+                    custo_acumulado = custo_atual + custo_sucessor + heuristic(estado_sucessor, problem)
+
+                    # Coloca na fila de prioridade o estado sucessor, custo acumulado e o caminho, alem da prioridade, 
+                    # que e tambem o custo acumulado (quanto menor o custo, maior a prioridade)
+                    fila_prioridade.push((estado_sucessor, custo_acumulado, caminho+[direcao]), custo_acumulado)
 
 
 # Abbreviations
